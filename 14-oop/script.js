@@ -53,3 +53,40 @@ const p3 = new Person('jack', 1975);
 // car1.accelerate();
 // car1.brake();
 // car1.accelerate();
+
+// class expression
+// const PersonCl=class{}
+
+// class declaration
+// class PersonCl {
+//   constructor(firstName, BirthYear) {
+//     this.firstName = firstName;
+//     this.BirthYear = BirthYear;
+//   }
+//   //instance Methods
+//   calcAge() {
+//     console.log(2023 - this.BirthYear);
+//   }
+//   static hey() {
+//     console.log('hey person');
+//   }
+// }
+// const Mohamed = new PersonCl('mohamed', 2003);
+// console.log(Mohamed);
+
+//Getters and Setters
+// const account = {
+//   ower: 'mohamed',
+//   movements: [200, 530, 120, 300],
+
+//   get latest() {
+//     return this.movements.slice(-1).pop();
+//   },
+//   set latest(mov) {
+//     this.movements.push(mov);
+//   },
+// };
+// console.log(account.latest);
+// account.latest = 50;
+// console.log(account.movements);
+// const PersonProto = {};
