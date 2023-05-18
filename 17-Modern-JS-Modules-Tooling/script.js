@@ -17,3 +17,7 @@ console.log(budget);
 if (module.hot) {
   module.hot.accept();
 }
+
+import 'core-js/stable';
+//
+import 'regenerator-runtime/runtime.js';
