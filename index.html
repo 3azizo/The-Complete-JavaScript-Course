@@ -48,6 +48,11 @@
         border-radius: 0.5em;
     }
 
+    li:last-child {
+        /* background: transparent; */
+        width: 50%;
+    }
+
     a {
         text-decoration: none;
         font-weight: bold;
@@ -60,6 +65,21 @@
 
     a:hover {
         transform: scale(1.2);
+    }
+
+    img {
+        width: 200px;
+    }
+
+    .about {
+        display: flex;
+    }
+
+    .about .logo-txt {
+        color: #28b487;
+        padding: 20px;
+        font-size: 120px;
+        margin: 0 auto;
     }
 
     @media (max-width:768px) {
@@ -80,6 +100,12 @@
             <li><a href="./12-Numbers-Dates-Timers-Bankist/index.html">Bankist Dashboad</a></li>
             <li><a href="./13-Advanced-DOM-Bankist/index.html">Bankist website</a></li>
             <li><a href="./15-Mapty/index.html">Mapty</a></li>
+            <li><a href="./18-forkify/index.html">Forkify</a></li>
+            <li>
+                <div class="about"><img src="logoINcoverGreen.png" alt="logo">
+                    <h1 class="logo-txt">3AZIZO</h1>
+                </div>
+            </li>
         </ul>
     </div>
 
