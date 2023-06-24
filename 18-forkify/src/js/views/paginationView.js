@@ -39,8 +39,6 @@ class paginationView extends View {
       </button>
             `;
     }
-
-    console.log(numPages);
     //page1, and there are other pages
     if (curPage === 1 && numPages > 1) {
       return renderNext();
