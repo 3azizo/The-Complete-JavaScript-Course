@@ -43,7 +43,7 @@ const controlSearchResults = async function () {
     resultsView.renderSpinner();
     //1)get search query
     const query = searchView.getQuery();
-    if (!query) return;
+    if (!query) return resultsView.renderError();
 
     //2) Load search results
     await model.loadSearchResults(query);
@@ -84,8 +84,12 @@ const controlAddBookmark = function () {
   // 3) Render bookmarks
   bookmarksView.render(model.state.bookmarks);
 };
+const controlBookmarks = function () {
+  bookmarksView.render(model.state.bookmarks);
+};
 
 const init = function () {
+  bookmarksView.addHandlerRender(controlBookmarks);
   recipeView.addHandlerRender(controlRecipes);
   recipeView.addHandlerUpdateServings(controlServings);
   recipeView.addHandlerAddBookmark(controlAddBookmark);
