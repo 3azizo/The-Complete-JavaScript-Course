@@ -2,6 +2,15 @@ import icons from 'url:../../img/icons.svg';
 export default class View {
   _data;
 
+  /**
+   * Render the received object to the DOM
+   * @param {Object | Object[]} data Tdat to be rendered (e.g. recipe)
+   * @param {boolean} [render=true] If false . create markup string instead of rendering to the DOM
+   * @returns {undefind | string} A makup striing is returned if render=false
+   * @this {Object} View Object
+   * @author 3azizo
+   * @todo finish implemenation
+   */
   render(data, render = true) {
     if (!data || (Array.isArray(data) && data.length === 0))
       return this.renderError();
