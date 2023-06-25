@@ -675,7 +675,7 @@ const init = function() {
 };
 init();
 
-},{"core-js/modules/es.regexp.flags.js":"gSXXb","core-js/modules/web.immediate.js":"49tUX","regenerator-runtime/runtime":"dXNgZ","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","./model":"Y4A21","./views/recipeView":"l60JC","./views/searchView":"9OQAM","./views/resultsView":"cSbZE","regenerator-runtime":"dXNgZ","./views/paginationView":"6z7bi","./views/bookmarksView":"4Lqzq","./views/addRecipeView":"i6DNj","./config":"k5Hzs"}],"gSXXb":[function(require,module,exports) {
+},{"core-js/modules/es.regexp.flags.js":"gSXXb","core-js/modules/web.immediate.js":"49tUX","./model":"Y4A21","./config":"k5Hzs","./views/recipeView":"l60JC","./views/searchView":"9OQAM","./views/resultsView":"cSbZE","./views/paginationView":"6z7bi","./views/bookmarksView":"4Lqzq","./views/addRecipeView":"i6DNj","regenerator-runtime/runtime":"dXNgZ","regenerator-runtime":"dXNgZ","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"gSXXb":[function(require,module,exports) {
 var global = require("55c574f1e26e7e5");
 var DESCRIPTORS = require("85fa17f2dce0e626");
 var defineBuiltInAccessor = require("cc8f9904a5fa9782");
@@ -2068,7 +2068,146 @@ module.exports = function(scheduler, hasTimeArg) {
 },{"ffb111c427832d02":"i8HOC","c1193b70304cb2a2":"148ka","e6435d567b57b810":"l3Kyn","eff71aac31dcd56d":"2BA6V","4a60fe04a76d2d06":"73xBt","660f3c38aaf9393e":"RsFXo","b13b7873bd6c34b9":"b9O3D"}],"2BA6V":[function(require,module,exports) {
 /* global Bun -- Deno case */ module.exports = typeof Bun == "function" && Bun && typeof Bun.version == "string";
 
-},{}],"dXNgZ":[function(require,module,exports) {
+},{}],"Y4A21":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "state", ()=>state);
+parcelHelpers.export(exports, "loadRecipe", ()=>loadRecipe);
+parcelHelpers.export(exports, "loadSearchResults", ()=>loadSearchResults);
+parcelHelpers.export(exports, "getSearchResultsPage", ()=>getSearchResultsPage);
+parcelHelpers.export(exports, "updateServings", ()=>updateServings);
+parcelHelpers.export(exports, "addBookmark", ()=>addBookmark);
+parcelHelpers.export(exports, "deleteBookmark", ()=>deleteBookmark);
+parcelHelpers.export(exports, "uploadRecipe", ()=>uploadRecipe);
+var _regeneratorRuntime = require("regenerator-runtime");
+var _config = require("./config");
+var _helpers = require("./helpers");
+var _bookmarksView = require("./views/bookmarksView");
+var _bookmarksViewDefault = parcelHelpers.interopDefault(_bookmarksView);
+const state = {
+    recipe: {},
+    search: {
+        query: "",
+        results: [],
+        page: 1,
+        resultsPerPage: (0, _config.RES_PER_PAGE)
+    },
+    bookmarks: []
+};
+const creatRecipeObject = function(data) {
+    const { recipe  } = data.data;
+    return {
+        id: recipe.id,
+        title: recipe.title,
+        publisher: recipe.publisher,
+        sourceUrl: recipe.source_url,
+        image: recipe.image_url,
+        servings: recipe.servings,
+        cookingTime: recipe.cooking_time,
+        ingredients: recipe.ingredients,
+        ...recipe.key && {
+            key: recipe.key
+        }
+    };
+};
+const loadRecipe = async function(id) {
+    try {
+        const data = await (0, _helpers.AJAX)(`${(0, _config.API_URL)}${id}?key=${(0, _config.KEY)}`);
+        state.recipe = creatRecipeObject(data);
+        if (state.bookmarks.some((b)=>b.id === id)) state.recipe.bookmarked = true;
+        else state.recipe.bookmarked = false;
+    } catch (err) {
+        throw err;
+    }
+};
+const loadSearchResults = async function(query) {
+    try {
+        state.search.query = query;
+        const data = await (0, _helpers.AJAX)(`${(0, _config.API_URL)}?search=${query}&key=${(0, _config.KEY)}`);
+        state.search.results = data.data.recipes.map((recipe)=>{
+            return {
+                id: recipe.id,
+                title: recipe.title,
+                publisher: recipe.publisher,
+                image: recipe.image_url,
+                ...recipe.key && {
+                    key: recipe.key
+                }
+            };
+        });
+    } catch (err) {
+        throw err;
+    }
+};
+const getSearchResultsPage = function(page = state.search.page) {
+    state.search.page = page;
+    const start = (page - 1) * state.search.resultsPerPage; //0;
+    const end = page * state.search.resultsPerPage; //9
+    return state.search.results.slice(start, end);
+};
+const updateServings = function(newServings) {
+    state.recipe.ingredients.forEach((ing)=>{
+        ing.quantity = ing.quantity * (newServings / state.recipe.servings);
+    });
+    state.recipe.servings = newServings;
+};
+const persistBookmarks = function() {
+    localStorage.setItem("bookmarks", JSON.stringify(state.bookmarks));
+};
+const addBookmark = function(recipe) {
+    //Add bookmark
+    state.bookmarks.push(recipe);
+    //mark current recipe as bookmark
+    if (recipe.id === state.recipe.id) state.recipe.bookmarked = true;
+    persistBookmarks();
+};
+const deleteBookmark = function(id) {
+    //Delete bookmark
+    const index = state.bookmarks.findIndex((el)=>el.id == id);
+    state.bookmarks.splice(index, 1);
+    //mark current recipe as NOT bookmark
+    if (id === state.recipe.id) state.recipe.bookmarked = false;
+    persistBookmarks();
+};
+const init = function() {
+    let storage = localStorage.getItem("bookmarks");
+    if (storage) state.bookmarks = JSON.parse(storage);
+};
+init();
+const clearBookmarks = function() {
+    localStorage.clear("bookmarks");
+};
+const uploadRecipe = async function(newRecipe) {
+    try {
+        const ingredients = Object.entries(newRecipe).filter((entry)=>entry[0].startsWith("ingredient") && entry[1] !== "").map((ing)=>{
+            const ingArr = ing[1].split(",").map((el)=>el.trim());
+            if (ingArr.length !== 3) throw new Error("wrong ingredient fromat! Please use the correct format :)");
+            const [quantity, unit, description] = ingArr;
+            return {
+                quantity: quantity ? +quantity : null,
+                unit,
+                description
+            };
+        });
+        const recipe = {
+            title: newRecipe.title,
+            source_url: newRecipe.sourceUrl,
+            image_url: newRecipe.image,
+            publisher: newRecipe.publisher,
+            cooking_time: +newRecipe.cookingTime,
+            servings: +newRecipe.servings,
+            ingredients
+        };
+        const data = await (0, _helpers.AJAX)(`${(0, _config.API_URL)}?key=${(0, _config.KEY)}`, recipe);
+        state.recipe = creatRecipeObject(data);
+        console.log(recipe, state.recipe);
+        addBookmark(state.recipe);
+    } catch (err) {
+        throw err;
+    }
+};
+
+},{"regenerator-runtime":"dXNgZ","./config":"k5Hzs","./helpers":"hGI1E","./views/bookmarksView":"4Lqzq","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"dXNgZ":[function(require,module,exports) {
 /**
  * Copyright (c) 2014-present, Facebook, Inc.
  *
@@ -2655,7 +2794,21 @@ try {
     else Function("r", "regeneratorRuntime = r")(runtime);
 }
 
-},{}],"gkKU3":[function(require,module,exports) {
+},{}],"k5Hzs":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "API_URL", ()=>API_URL);
+parcelHelpers.export(exports, "TIME_SEC", ()=>TIME_SEC);
+parcelHelpers.export(exports, "RES_PER_PAGE", ()=>RES_PER_PAGE);
+parcelHelpers.export(exports, "KEY", ()=>KEY);
+parcelHelpers.export(exports, "MODAL_CLOSE_SEC", ()=>MODAL_CLOSE_SEC);
+const API_URL = "https://forkify-api.herokuapp.com/api/v2/recipes/";
+const TIME_SEC = 10;
+const RES_PER_PAGE = 10;
+const KEY = "89eb3bdd-4604-4f17-a8dc-ed620516f9f2";
+const MODAL_CLOSE_SEC = 2.5;
+
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"gkKU3":[function(require,module,exports) {
 exports.interopDefault = function(a) {
     return a && a.__esModule ? a : {
         default: a
@@ -2685,160 +2838,7 @@ exports.export = function(dest, destName, get) {
     });
 };
 
-},{}],"Y4A21":[function(require,module,exports) {
-var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
-parcelHelpers.defineInteropFlag(exports);
-parcelHelpers.export(exports, "state", ()=>state);
-parcelHelpers.export(exports, "loadRecipe", ()=>loadRecipe);
-parcelHelpers.export(exports, "loadSearchResults", ()=>loadSearchResults);
-parcelHelpers.export(exports, "getSearchResultsPage", ()=>getSearchResultsPage);
-parcelHelpers.export(exports, "updateServings", ()=>updateServings);
-parcelHelpers.export(exports, "addBookmark", ()=>addBookmark);
-parcelHelpers.export(exports, "deleteBookmark", ()=>deleteBookmark);
-parcelHelpers.export(exports, "uploadRecipe", ()=>uploadRecipe);
-var _regeneratorRuntime = require("regenerator-runtime");
-var _config = require("./config");
-var _helpers = require("./helpers");
-var _bookmarksView = require("./views/bookmarksView");
-var _bookmarksViewDefault = parcelHelpers.interopDefault(_bookmarksView);
-const state = {
-    recipe: {},
-    search: {
-        query: "",
-        results: [],
-        page: 1,
-        resultsPerPage: (0, _config.RES_PER_PAGE)
-    },
-    bookmarks: []
-};
-const creatRecipeObject = function(data) {
-    const { recipe  } = data.data;
-    return {
-        id: recipe.id,
-        title: recipe.title,
-        publisher: recipe.publisher,
-        sourceUrl: recipe.source_url,
-        image: recipe.image_url,
-        servings: recipe.servings,
-        cookingTime: recipe.cooking_time,
-        ingredients: recipe.ingredients,
-        ...recipe.key && {
-            key: recipe.key
-        }
-    };
-};
-const loadRecipe = async function(id) {
-    try {
-        const data = await (0, _helpers.AJAX)(`${(0, _config.API_URL)}${id}?key=${(0, _config.KEY)}`);
-        state.recipe = creatRecipeObject(data);
-        if (state.bookmarks.some((b)=>b.id === id)) state.recipe.bookmarked = true;
-        else state.recipe.bookmarked = false;
-    } catch (err) {
-        throw err;
-    }
-};
-const loadSearchResults = async function(query) {
-    try {
-        state.search.query = query;
-        const data = await (0, _helpers.AJAX)(`${(0, _config.API_URL)}?search=${query}&key=${(0, _config.KEY)}`);
-        state.search.results = data.data.recipes.map((recipe)=>{
-            return {
-                id: recipe.id,
-                title: recipe.title,
-                publisher: recipe.publisher,
-                image: recipe.image_url,
-                ...recipe.key && {
-                    key: recipe.key
-                }
-            };
-        });
-    } catch (err) {
-        throw err;
-    }
-};
-const getSearchResultsPage = function(page = state.search.page) {
-    state.search.page = page;
-    const start = (page - 1) * state.search.resultsPerPage; //0;
-    const end = page * state.search.resultsPerPage; //9
-    return state.search.results.slice(start, end);
-};
-const updateServings = function(newServings) {
-    state.recipe.ingredients.forEach((ing)=>{
-        ing.quantity = ing.quantity * (newServings / state.recipe.servings);
-    });
-    state.recipe.servings = newServings;
-};
-const persistBookmarks = function() {
-    localStorage.setItem("bookmarks", JSON.stringify(state.bookmarks));
-};
-const addBookmark = function(recipe) {
-    //Add bookmark
-    state.bookmarks.push(recipe);
-    //mark current recipe as bookmark
-    if (recipe.id === state.recipe.id) state.recipe.bookmarked = true;
-    persistBookmarks();
-};
-const deleteBookmark = function(id) {
-    //Delete bookmark
-    const index = state.bookmarks.findIndex((el)=>el.id == id);
-    state.bookmarks.splice(index, 1);
-    //mark current recipe as NOT bookmark
-    if (id === state.recipe.id) state.recipe.bookmarked = false;
-    persistBookmarks();
-};
-const init = function() {
-    let storage = localStorage.getItem("bookmarks");
-    if (storage) state.bookmarks = JSON.parse(storage);
-};
-init();
-const clearBookmarks = function() {
-    localStorage.clear("bookmarks");
-};
-const uploadRecipe = async function(newRecipe) {
-    try {
-        const ingredients = Object.entries(newRecipe).filter((entry)=>entry[0].startsWith("ingredient") && entry[1] !== "").map((ing)=>{
-            const ingArr = ing[1].split(",").map((el)=>el.trim());
-            if (ingArr.length !== 3) throw new Error("wrong ingredient fromat! Please use the correct format :)");
-            const [quantity, unit, description] = ingArr;
-            return {
-                quantity: quantity ? +quantity : null,
-                unit,
-                description
-            };
-        });
-        const recipe = {
-            title: newRecipe.title,
-            source_url: newRecipe.sourceUrl,
-            image_url: newRecipe.image,
-            publisher: newRecipe.publisher,
-            cooking_time: +newRecipe.cookingTime,
-            servings: +newRecipe.servings,
-            ingredients
-        };
-        const data = await (0, _helpers.AJAX)(`${(0, _config.API_URL)}?key=${(0, _config.KEY)}`, recipe);
-        state.recipe = creatRecipeObject(data);
-        console.log(recipe, state.recipe);
-        addBookmark(state.recipe);
-    } catch (err) {
-        throw err;
-    }
-};
-
-},{"regenerator-runtime":"dXNgZ","./config":"k5Hzs","./helpers":"hGI1E","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","./views/bookmarksView":"4Lqzq"}],"k5Hzs":[function(require,module,exports) {
-var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
-parcelHelpers.defineInteropFlag(exports);
-parcelHelpers.export(exports, "API_URL", ()=>API_URL);
-parcelHelpers.export(exports, "TIME_SEC", ()=>TIME_SEC);
-parcelHelpers.export(exports, "RES_PER_PAGE", ()=>RES_PER_PAGE);
-parcelHelpers.export(exports, "KEY", ()=>KEY);
-parcelHelpers.export(exports, "MODAL_CLOSE_SEC", ()=>MODAL_CLOSE_SEC);
-const API_URL = "https://forkify-api.herokuapp.com/api/v2/recipes/";
-const TIME_SEC = 10;
-const RES_PER_PAGE = 10;
-const KEY = "89eb3bdd-4604-4f17-a8dc-ed620516f9f2";
-const MODAL_CLOSE_SEC = 2.5;
-
-},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"hGI1E":[function(require,module,exports) {
+},{}],"hGI1E":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "AJAX", ()=>AJAX);
@@ -3196,7 +3196,7 @@ class RecipeView extends (0, _viewDefault.default) {
 }
 exports.default = new RecipeView();
 
-},{"url:../../img/icons.svg":"loVOp","fractional":"3SU56","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","./View":"5cUXS"}],"3SU56":[function(require,module,exports) {
+},{"./View":"5cUXS","url:../../img/icons.svg":"loVOp","fractional":"3SU56","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"3SU56":[function(require,module,exports) {
 /*
 fraction.js
 A Javascript fraction library.
@@ -3490,7 +3490,7 @@ class ResultsView extends (0, _viewDefault.default) {
 }
 exports.default = new ResultsView();
 
-},{"./View":"5cUXS","url:../../img/icons.svg":"loVOp","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","./previewView":"1FDQ6"}],"6z7bi":[function(require,module,exports) {
+},{"./View":"5cUXS","url:../../img/icons.svg":"loVOp","./previewView":"1FDQ6","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"6z7bi":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 var _view = require("./View");
